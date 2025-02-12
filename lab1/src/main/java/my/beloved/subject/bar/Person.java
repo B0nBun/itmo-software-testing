@@ -38,6 +38,14 @@ public class Person {
         reciever.hasDrinks.add(drink);
     }
 
+    public int getIntoxication() {
+        return this.intoxication;
+    }
+
+    public boolean hasDrink(Drink drink) {
+        return this.hasDrinks.contains(drink);
+    }
+
     public static class DrinkNotFoundException extends RuntimeException {
         public DrinkNotFoundException() {}
     }

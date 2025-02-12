@@ -90,11 +90,7 @@
         </executions>
         <configuration>
           <excludes>
-            <!-- TODO: Fix later  -->
             <exclude>**/my/beloved/subject/App.class</exclude>
-            <exclude>**/my/beloved/subject/Ford.class</exclude>
-            <exclude>**/my/beloved/subject/Arthur.class</exclude>
-            <exclude>**/my/beloved/subject/Stranger.class</exclude>
           </excludes>
         </configuration>
       </plugin>
