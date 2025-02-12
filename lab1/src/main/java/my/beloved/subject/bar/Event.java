@@ -1,4 +1,4 @@
-package my.beloved.subject;
+package my.beloved.subject.bar;
 
 public interface Event {
     public String description(Person reciever);
