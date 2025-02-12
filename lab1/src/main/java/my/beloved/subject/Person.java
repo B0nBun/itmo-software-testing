@@ -1,62 +1,108 @@
 package my.beloved.subject;
 
 import java.util.ArrayList;
-import java.util.Map;
-
-
-// enum Emotion
-// enum Drink
-// enum Stimuli
-
-// class Person(String identoifier, int money, []Drink wantsDrinks, []Drink drinks, int intoxication)
-//    addListener(TriFunction<Runnable next, intoxication, Stimuli, Emotion> func)
-
-// class Bar([]Person people)
-//     giveOut() Gives everyone a drink
-//     emit(Stimuli) notifies every person
-//
 
 public class Person {
-    public final String identifier;
-    private int money;
-    public final float susceptibility;
-    private ArrayList<Drink> drinks = new ArrayList<>();
-    private int intoxication = 0;
-    private Map<Sound, Reaction> reactions;
+    public final String name;
+    int intoxication = 0;
+    ArrayList<Drink> hasDrinks = new ArrayList<>();
 
-    public Person(String identifier, int money, float susceptibility, Map<Sound, Reaction> reactions) {
-        this.identifier = identifier;
-        this.money = money;
-        this.susceptibility = susceptibility;
-        this.reactions = reactions;
+    public Person(String name) {
+        this.name = name;
     }
 
-    public Reaction reactTo(Sound sound) {
-        return this.reactions.getOrDefault(sound, Reaction.UNKNOWN);
-    }
+    public void reactTo(Event event) {
+        System.out.println(event.description(this));
+    };
 
-    public boolean canAfford(Drink drink) {
-        return this.money > drink.price;
-    }
-
-    public void buy(Drink drink) {
-        this.money -= drink.price;
-        // TODO: Throw if no money
-        this.drinks.add(drink);
+    public void buyDrink(Drink drink) {
+        System.out.println(this.name + " buys a " + drink);
+        this.hasDrinks.add(drink);
     }
 
     public void drink(Drink drink) {
-        // TODO: Throw if no drink
-        this.intoxication += drink.intoxication * this.susceptibility;
-        this.drinks.remove(drink);
+        boolean deleted = this.hasDrinks.remove(drink);
+        if (!deleted) {
+            throw new DrinkNotFoundException();
+        }
+        System.out.println(this.name + " drank a " + drink);
+        this.intoxication += 1;
     }
 
-    public void give(Person person, Drink drink) {
-        this.drinks.remove(drink);
-        person.drinks.add(drink);
+    public void giveDrink(Drink drink, Person reciever) {
+        boolean deleted = this.hasDrinks.remove(drink);
+        if (!deleted) {
+            throw new DrinkNotFoundException();
+        }
+        System.out.println(this.name + " gave a " + drink + " to " + reciever.name);
+        reciever.hasDrinks.add(drink);
     }
 
-    public int getIntoxicationDegree() {
-        return this.intoxication;
+
+    public static class Ford extends Person {
+        public Ford() {
+            super("Ford");
+        }
+
+        @Override
+        public void reactTo(Event event) {
+            super.reactTo(event);
+            if (event == Event.NoPayload.MUSIC) {
+                this.buyDrink(Drink.WHISKEY);
+                this.drink(Drink.WHISKEY);
+                return;
+            }
+            if (this.intoxication >= 1 && event instanceof Event.AskedForDrink) {
+                var askedForDrink = (Event.AskedForDrink)event;
+                Person otherClient = askedForDrink.asker();
+                Drink drink = askedForDrink.drink();
+                this.buyDrink(drink);
+                this.giveDrink(drink, otherClient);
+                return;
+            }
+            if (event == Event.NoPayload.RUMBLE) {
+                System.out.println("Ford is annoyed");
+            }
+        }
+    }
+
+    public static class Arthur extends Person {
+        public Arthur() {
+            super("Arthur");
+        }
+
+        @Override
+        public void reactTo(Event event) {
+            super.reactTo(event);
+            if (event == Event.NoPayload.MUSIC || event == Event.NoPayload.CHATTER) {
+                this.buyDrink(Drink.BEER);
+                this.drink(Drink.BEER);
+                return;
+            }
+            if (event == Event.NoPayload.RUMBLE) {
+                System.out.println("Arthur soberd up from shock");
+                this.intoxication = 0;
+            }
+        }
+    }
+
+    public static class Stranger extends Person {
+        public Stranger() {
+            super("Stranger");
+            this.intoxication = 5;
+        }
+
+        @Override
+        public void reactTo(Event event) {
+            super.reactTo(event);
+            // Doesn't care about anything, just drinks
+            while (!this.hasDrinks.isEmpty()) {
+                this.drink(this.hasDrinks.get(0));
+            }
+        }
+    }
+
+    public static class DrinkNotFoundException extends RuntimeException {
+        public DrinkNotFoundException() {}
     }
 }
