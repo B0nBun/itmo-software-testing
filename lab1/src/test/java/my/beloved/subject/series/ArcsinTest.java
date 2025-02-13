@@ -4,28 +4,23 @@ import java.util.List;
 import java.util.Random;
 
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ArcsinTest {
     private static long random_seed = 0;
-    private static int random_iterations = 100;
+    private static int random_iterations = 500;
 
-    @ParameterizedTest
-    @CsvSource({
-        "0, 0.95, 0.001",
-        "0.95, 0.985, 0.01",
-        "0.985, 1, 0.1",
-    })
-    public void testPointsForPrecision(double lowerBound, double upperBound, double precision) {
-        // TODO: Express precision as a function
+    @Test
+    public void testPointsForPrecision() {
         var rand = new Random(ArcsinTest.random_seed);
         for (int i = 0; i < ArcsinTest.random_iterations; i ++) {
-            double randomX = rand.nextDouble(lowerBound, upperBound);
+            double randomX = rand.nextDouble(0, 1);
             for (double x : List.of(randomX, -randomX)) {
                 double expected = Math.asin(x);
                 double actual = Arcsin.compute(x);
+                double precision = Arcsin.precisionForX(x);
                 Assertions.assertEquals(expected, actual, precision);
             }
         }

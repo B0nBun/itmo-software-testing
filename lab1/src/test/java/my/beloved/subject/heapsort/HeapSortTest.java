@@ -15,7 +15,7 @@ public class HeapSortTest {
     private static long seed = 0;
 
     @ParameterizedTest
-    @ValueSource(ints={0, 1, 10, 11})
+    @ValueSource(ints={0, 1, 100, 101})
     public void sortingWithDifferentSizes(int len) {
         List<Integer> range = IntStream.range(0, len).boxed().collect(Collectors.toList());
         List<Integer> toSort = new ArrayList<>(range);
