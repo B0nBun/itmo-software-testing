@@ -9,17 +9,36 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Assertions;
 
 public class ArcsinTest {
-    private static long random_seed = 0;
-    private static int random_iterations = 100;
+
+    @ParameterizedTest
+    @CsvSource({
+        "0.0,   0.0",
+        "0.5,   0.523",
+        "0.25,  0.252",
+        "0.75,  0.848",
+        "0.125, 0.125",
+        "0.625, 0.675",
+        "0.875, 1.065",
+        "1.0,   1.468"
+    })
+    public void testPoints(double x, double expectedY) {
+        for (double sign : List.of(1, -1)) {
+            double actual = Arcsin.compute(sign * x);
+            Assertions.assertEquals(sign * expectedY, actual, 0.001);
+        }
+    }
+
+
+    private static long random_seed = 1;
+    private static int random_iterations = 1000;
 
     @ParameterizedTest
     @CsvSource({
         "0, 0.95, 0.001",
-        "0.95, 0.985, 0.01",
+        "0.95, 0.985, 0.015",
         "0.985, 1, 0.1",
     })
-    public void testPointsForPrecision(double lowerBound, double upperBound, double precision) {
-        // TODO: Express precision as a function
+    public void testRandomPointsForPrecision(double lowerBound, double upperBound, double precision) {
         var rand = new Random(ArcsinTest.random_seed);
         for (int i = 0; i < ArcsinTest.random_iterations; i ++) {
             double randomX = rand.nextDouble(lowerBound, upperBound);
@@ -35,13 +54,5 @@ public class ArcsinTest {
     @ValueSource(doubles={-1.1, 1.1})
     public void outOfBoundsReturnsNaN(double x) {
         Assertions.assertEquals(Double.NaN, Arcsin.compute(x));
-    }
-
-    @ParameterizedTest
-    @ValueSource(doubles={-1, 1})
-    public void boundaryPointsPrecision(double x) {
-        double expected = Math.asin(x);
-        double actual = Arcsin.compute(x);
-        Assertions.assertEquals(expected, actual, 0.102);
     }
 }

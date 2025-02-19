@@ -18,11 +18,18 @@ public class HeapSortTest {
     @ValueSource(ints={0, 1, 100, 101})
     public void sortingWithDifferentSizes(int len) {
         List<Integer> range = IntStream.range(0, len).boxed().collect(Collectors.toList());
-        List<Integer> toSort = new ArrayList<>(range);
-        Collections.shuffle(toSort, new Random(seed));
+        var toSort = new ArrayList<Integer>(range);
+        var toSortBy = new ArrayList<Integer>(range);
+        
+        var rand = new Random(seed);
+        Collections.shuffle(toSort, rand);
+        Collections.shuffle(toSort, rand);
     
         HeapSort.sort(toSort);
-
         Assertions.assertIterableEquals(range, toSort);
+
+        HeapSort.sortBy(toSortBy, (a, b) -> b - a);
+        Collections.reverse(range);
+        Assertions.assertIterableEquals(range, toSortBy);
     }
 }
