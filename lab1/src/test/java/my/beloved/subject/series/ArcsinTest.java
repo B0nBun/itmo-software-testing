@@ -9,25 +9,21 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Assertions;
 
 public class ArcsinTest {
-
     @ParameterizedTest
     @CsvSource({
-        "0.0,   0.0",
-        "0.5,   0.523",
-        "0.25,  0.252",
-        "0.75,  0.848",
-        "0.125, 0.125",
-        "0.625, 0.675",
-        "0.875, 1.065",
-        "1.0,   1.468"
+        "0.0,                0.0",
+        "1.5707963267948966, 0.12",   // pi / 2
+        "1.0471975511965976, 0.001",  // pi / 3
+        "0.7853981633974483, 0.0001", // pi / 4
+        "0.5235987755982988, 0.0001"  // pi / 6
     })
-    public void testPoints(double x, double expectedY) {
+    public void testPoints(double expectedY, double precision) {
         for (double sign : List.of(1, -1)) {
-            double actual = Arcsin.compute(sign * x);
-            Assertions.assertEquals(sign * expectedY, actual, 0.001);
+            double x = Math.sin(sign * expectedY);
+            double actual = Arcsin.compute(x);
+            Assertions.assertEquals(sign * expectedY, actual, precision);
         }
     }
-
 
     private static long random_seed = 1;
     private static int random_iterations = 1000;

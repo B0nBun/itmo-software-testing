@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MockController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lab1</a> &gt; <a href="index.source.html" class="el_package">my.beloved.subject.mock</a> &gt; <span class="el_source">MockController.java</span></div><h1>MockController.java</h1><pre class="source lang-java linenums">package my.beloved.subject.mock;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="nc" id="L12">class MockController {</span>
+<span class="nc" id="L13">    Map&lt;Object, MockInvocationHandler&gt; proxyToMock = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L14">    Map&lt;Object, ExpectInvocationHandler&gt; proxyToExpected = new HashMap&lt;&gt;();</span>
+    
+    public &lt;T&gt; T mock(Class&lt;T&gt; clazz) {
+<span class="nc bnc" id="L17" title="All 2 branches missed.">        if (!clazz.isInterface()) {</span>
+            // Throw
+        }
+<span class="nc" id="L20">        ClassLoader loader = clazz.getClassLoader();</span>
+<span class="nc" id="L21">        Class&lt;?&gt;[] interfaces = clazz.getInterfaces();</span>
+        
+<span class="nc" id="L23">        var expectHandler = new ExpectInvocationHandler();</span>
+<span class="nc" id="L24">        Object expectProxy = Proxy.newProxyInstance(loader, interfaces, expectHandler);</span>
+<span class="nc" id="L25">        this.proxyToExpected.put(expectProxy, expectHandler);</span>
+        
+<span class="nc" id="L27">        var mockHandler = new MockInvocationHandler(expectHandler);</span>
+<span class="nc" id="L28">        Object mockProxy = Proxy.newProxyInstance(loader, interfaces, mockHandler);</span>
+<span class="nc" id="L29">        this.proxyToMock.put(mockProxy, mockHandler);</span>
+        
+<span class="nc" id="L31">        return clazz.cast(mockProxy);</span>
+    }
+
+    // public MockCall expect() {
+
+    // }
+}
+
+<span class="nc" id="L39">class ExpectInvocationHandler implements InvocationHandler {</span>
+<span class="nc" id="L40">    List&lt;MockCall&gt; expected = new ArrayList&lt;&gt;();</span>
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+<span class="nc" id="L44">        Object toReturn = method.getReturnType().getConstructor().newInstance();</span>
+        // toReturn.
+<span class="nc" id="L46">        this.expected.add(new MockCall(method, args));</span>
+<span class="nc" id="L47">        return toReturn;</span>
+    }
+}
+
+class MockInvocationHandler implements InvocationHandler {
+    ExpectInvocationHandler expectHandler;
+
+<span class="nc" id="L54">    public MockInvocationHandler(ExpectInvocationHandler expectHandler) {</span>
+<span class="nc" id="L55">        this.expectHandler = expectHandler;</span>
+<span class="nc" id="L56">    }</span>
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+<span class="nc" id="L60">        return null;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

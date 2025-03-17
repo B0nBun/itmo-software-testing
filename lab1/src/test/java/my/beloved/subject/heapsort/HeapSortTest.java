@@ -19,17 +19,25 @@ public class HeapSortTest {
     public void sortingWithDifferentSizes(int len) {
         List<Integer> range = IntStream.range(0, len).boxed().collect(Collectors.toList());
         var toSort = new ArrayList<Integer>(range);
-        var toSortBy = new ArrayList<Integer>(range);
         
         var rand = new Random(seed);
-        Collections.shuffle(toSort, rand);
         Collections.shuffle(toSort, rand);
     
         HeapSort.sort(toSort);
         Assertions.assertIterableEquals(range, toSort);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints={0, 1, 100, 101})
+    public void sortingByWithDifferentSizes(int len) {
+        List<Integer> range = IntStream.range(0, len).boxed().collect(Collectors.toList());
+        Collections.reverse(range);
+        var toSortBy = new ArrayList<Integer>(range);
+
+        var rand = new Random(seed);
+        Collections.shuffle(toSortBy, rand);
 
         HeapSort.sortBy(toSortBy, (a, b) -> b - a);
-        Collections.reverse(range);
         Assertions.assertIterableEquals(range, toSortBy);
     }
 }

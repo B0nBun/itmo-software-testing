@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MapReduce.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lab1</a> &gt; <a href="index.source.html" class="el_package">my.beloved.subject.mapreduce</a> &gt; <span class="el_source">MapReduce.java</span></div><h1>MapReduce.java</h1><pre class="source lang-java linenums">package my.beloved.subject.mapreduce;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+public final class MapReduce&lt;K, V, R&gt; {
+    private Collection&lt;String&gt; inputFiles;
+    private MapFunc&lt;K, V&gt; map;
+    private ReduceFunc&lt;K, V, R&gt; reduce;
+
+    private ExecutorService mapExecutorService;
+    private ExecutorService reduceExecutorService;
+    
+<span class="nc" id="L21">    private ConcurrentHashMap&lt;K, Collection&lt;V&gt;&gt; mapResult = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L22">    private ConcurrentHashMap&lt;K, R&gt; reduceResult = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L23">    private ConcurrentHashMap&lt;String, Exception&gt; filenameToMapException = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L24">    private ConcurrentHashMap&lt;Pair&lt;K, Collection&lt;V&gt;&gt;, Exception&gt; reduceException = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L25">    private boolean mappingFinished = false;</span>
+
+<span class="nc" id="L27">    public MapReduce(</span>
+        Collection&lt;String&gt; inputFiles,
+        Supplier&lt;ExecutorService&gt; mapExecutorService,
+        Supplier&lt;ExecutorService&gt; reduceExecutorService,
+        MapFunc&lt;K, V&gt; map,
+        ReduceFunc&lt;K, V, R&gt; reduce
+    ) {
+<span class="nc" id="L34">        this.inputFiles = inputFiles;</span>
+<span class="nc" id="L35">        this.mapExecutorService = mapExecutorService.get();</span>
+<span class="nc" id="L36">        this.reduceExecutorService = reduceExecutorService.get();</span>
+<span class="nc" id="L37">        this.map = map;</span>
+<span class="nc" id="L38">        this.reduce = reduce;</span>
+<span class="nc" id="L39">    }</span>
+
+    @FunctionalInterface
+    public static interface MapFunc&lt;K, V&gt; {
+        public Stream&lt;Pair&lt;K, V&gt;&gt; map(String filename) throws Exception;
+    }
+
+    @FunctionalInterface
+    public static interface ReduceFunc&lt;K, V, R&gt; {
+        public R reduce(K key, Collection&lt;V&gt; values) throws Exception;
+    }
+
+    public static final class Pair&lt;K, V&gt; {
+        public K key;
+        public V val;
+
+<span class="nc" id="L55">        public Pair(K key, V val) {</span>
+<span class="nc" id="L56">            this.key = key;</span>
+<span class="nc" id="L57">            this.val = val;</span>
+<span class="nc" id="L58">        }</span>
+    }
+
+    public Map&lt;K, R&gt; run() throws InterruptedException {
+<span class="nc" id="L62">        var mapCountDown = new CountDownLatch(inputFiles.size());</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        for (String filename : inputFiles) {</span>
+<span class="nc" id="L64">            this.mapExecutorService.execute(() -&gt; {</span>
+<span class="nc" id="L65">                try (Stream&lt;Pair&lt;K, V&gt;&gt; mapped = this.map.map(filename)) {</span>
+<span class="nc" id="L66">                    mapped.forEach(pair -&gt; {</span>
+<span class="nc" id="L67">                        Collection&lt;V&gt; coll = this.mapResult.get(pair.key);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                        if (coll == null) {</span>
+<span class="nc" id="L69">                            coll = Collections.synchronizedCollection(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L70">                            this.mapResult.put(pair.key, coll);</span>
+                        }
+<span class="nc" id="L72">                        coll.add(pair.val);</span>
+<span class="nc" id="L73">                    });</span>
+<span class="nc" id="L74">                } catch (Exception e) {</span>
+<span class="nc" id="L75">                    this.filenameToMapException.put(filename, e);</span>
+                } finally {
+<span class="nc" id="L77">                    mapCountDown.countDown();</span>
+                }
+<span class="nc" id="L79">            });</span>
+        }
+<span class="nc" id="L81">        this.mapExecutorService.shutdown();</span>
+<span class="nc" id="L82">        mapCountDown.await();</span>
+<span class="nc" id="L83">        this.mappingFinished = true;</span>
+
+<span class="nc" id="L85">        var reduceCountDown = new CountDownLatch(this.mapResult.size());</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        for (var entry : this.mapResult.entrySet()) {</span>
+<span class="nc" id="L87">            this.reduceExecutorService.execute(() -&gt; {</span>
+                try {
+<span class="nc" id="L89">                    R result = this.reduce.reduce(entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L90">                    this.reduceResult.put(entry.getKey(), result);</span>
+<span class="nc" id="L91">                } catch (Exception e) {</span>
+<span class="nc" id="L92">                    this.reduceException.put(</span>
+<span class="nc" id="L93">                        new Pair&lt;&gt;(entry.getKey(), entry.getValue()),</span>
+<span class="nc" id="L94">                        e</span>
+                    );
+                } finally {
+<span class="nc" id="L97">                    reduceCountDown.countDown();</span>
+                }
+<span class="nc" id="L99">            });</span>
+        }
+<span class="nc" id="L101">        this.reduceExecutorService.shutdown();</span>
+<span class="nc" id="L102">        reduceCountDown.await();</span>
+
+<span class="nc" id="L104">        return this.reduceResult;</span>
+    }
+
+    public Map&lt;String, Exception&gt; getMapExceptions() {
+<span class="nc" id="L108">        return Collections.unmodifiableMap(this.filenameToMapException);</span>
+    }
+
+    public Map&lt;Pair&lt;K, Collection&lt;V&gt;&gt;, Exception&gt; getReduceExceptions() {
+<span class="nc" id="L112">        return Collections.unmodifiableMap(this.reduceException);</span>
+    }
+
+    public boolean isMappingFinished() {
+<span class="nc" id="L116">        return this.mappingFinished;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

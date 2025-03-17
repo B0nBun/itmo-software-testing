@@ -1,5 +1,8 @@
 package my.beloved.subject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,45 @@ import my.beloved.subject.bar.Event;
 import my.beloved.subject.bar.Person;
 
 public class AppTest {
+
+    @Test
+    public void playScene() {
+        var ford = new MockPerson("Ford");
+        var arthur = new MockPerson("Arthur");
+        var stranger = new MockPerson("Stranger");
+    
+        App.playScene(ford, arthur, stranger);
+
+        Assertions.assertIterableEquals(
+            List.of(
+                new Event.AskedForDrink(Drink.WHISKEY, stranger),
+                Event.NoPayload.MUSIC,
+                Event.NoPayload.CHATTER,
+                new Event.AskedForDrink(Drink.WHISKEY, stranger),
+                Event.NoPayload.RUMBLE
+            ),
+            ford.recordedEvents
+        );
+
+        Assertions.assertIterableEquals(
+            List.of(
+                Event.NoPayload.MUSIC,
+                Event.NoPayload.CHATTER,
+                Event.NoPayload.RUMBLE
+            ),
+            arthur.recordedEvents
+        );
+
+        Assertions.assertIterableEquals(
+            List.of(
+                Event.NoPayload.MUSIC,
+                Event.NoPayload.CHATTER,
+                Event.NoPayload.RUMBLE
+            ),
+            stranger.recordedEvents
+        );
+    }
+
     @Nested
     class FordTest {
         @Test
@@ -82,5 +124,18 @@ public class AppTest {
             stranger.reactTo(Event.NoPayload.CHATTER);
             Assertions.assertEquals(9, stranger.getIntoxication());
         }
+    }
+}
+
+class MockPerson extends Person {
+    public List<Event> recordedEvents = new ArrayList<>();
+    
+    public MockPerson(String name) {
+        super(name);
+    }
+
+    @Override
+    public void reactTo(Event event) {
+        this.recordedEvents.add(event);
     }
 }

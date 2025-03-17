@@ -13,6 +13,10 @@ public class App {
         var arthur = new Arthur();
         var stranger = new Stranger();
 
+        playScene(ford, arthur, stranger);
+    }
+
+    public static void playScene(Person ford, Person arthur, Person stranger) {
         var bar = new Bar(List.of(ford, arthur, stranger));
         ford.reactTo(new Event.AskedForDrink(Drink.WHISKEY, stranger));
         bar.emit(Event.NoPayload.MUSIC);

@@ -1,7 +1,7 @@
 package my.beloved.subject.series;
 
 public class Arcsin {
-    public final static int terms = 300;
+    private final static int terms = 300;
     public static double compute(double x) {
         if (x < -1 || x > 1) {
             return Double.NaN;
