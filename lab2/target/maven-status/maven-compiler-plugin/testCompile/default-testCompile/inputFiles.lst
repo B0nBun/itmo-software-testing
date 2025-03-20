@@ -1,1 +1,2 @@
-/home/rgusyakov/itmo/itmo-software-testing/lab2/src/test/java/my/beloved/subject/AppTest.java
+/home/rgusyakov/itmo/itmo-software-testing/lab2/src/test/java/my/beloved/subject/broker/MessageBrokerTest.java
+/home/rgusyakov/itmo/itmo-software-testing/lab2/src/test/java/my/beloved/subject/math/MathematicsTest.java
