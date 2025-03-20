@@ -14,6 +14,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 
+// TODO: Check SIN and LN separately (right now they are mocked)
+// TODO: Test UberFunc
+
 @TestInstance(Lifecycle.PER_CLASS)
 public class MathematicsTest {
     private final double precision = 0.001;

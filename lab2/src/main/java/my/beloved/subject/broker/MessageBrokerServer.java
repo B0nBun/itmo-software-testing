@@ -13,11 +13,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MessageBrokerServer implements AutoCloseable {
-    ServerSocketChannel server = null;
-    Selector selector = null;
-    ArrayList<SocketChannel> clients = new ArrayList<>();
-    AtomicBoolean stopped = new AtomicBoolean(false);
+public class MessageBrokerServer {
+    private ServerSocketChannel server = null;
+    private Selector selector = null;
+    private ArrayList<SocketChannel> clients = new ArrayList<>();
+    private AtomicBoolean stopped = new AtomicBoolean(false);
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public MessageBrokerServer() {}
 
@@ -32,20 +33,33 @@ public class MessageBrokerServer implements AutoCloseable {
         int ops = server.validOps();
         server.register(this.selector, ops, null);
 
-        while (!stopped.get()) {
-            this.selector.select();
-            Iterator<SelectionKey> selectedKeys = this.selector.selectedKeys().iterator();
-            
-            while (selectedKeys.hasNext()) {
-                SelectionKey key = selectedKeys.next();
-                if (key.isAcceptable()) {
-                    this.handleAccept(key);
-                } else if (key.isReadable()) {
-                    this.handleRead(key);
+        try {
+            while (!stopped.get()) {
+                this.selector.selectNow();
+                Iterator<SelectionKey> selectedKeys = this.selector.selectedKeys().iterator();
+                
+                while (selectedKeys.hasNext()) {
+                    SelectionKey key = selectedKeys.next();
+                    if (key.isAcceptable()) {
+                        this.handleAccept(key);
+                    } else if (key.isReadable()) {
+                        this.handleRead(key);
+                    }
+                    selectedKeys.remove();
                 }
-                selectedKeys.remove();
             }
+        } finally {
+            this.server.close();
+            this.selector.close();
+            for (var client : clients) {
+                client.close();
+            }
+            this.closed.set(true);
         }
+    }
+
+    public boolean isStopped() {
+        return !this.server.isOpen();
     }
 
     private void handleAccept(SelectionKey key) throws IOException {
@@ -96,20 +110,7 @@ public class MessageBrokerServer implements AutoCloseable {
         return a.getRemoteAddress() == b.getRemoteAddress() && a.getLocalAddress() == b.getLocalAddress();
     }
 
-    public void stop() throws IOException {
+    public void stop() {
         this.stopped.set(true);
-        if (this.server != null) {
-            this.server.close();
-        }
-        if (this.selector != null) {
-            this.selector.close();
-        }
-        for (SocketChannel client : this.clients) {
-            client.close();
-        }
-    }
-
-    public void close() throws IOException {
-        this.stop();
     }
 }

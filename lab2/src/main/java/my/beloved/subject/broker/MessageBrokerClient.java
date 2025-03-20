@@ -5,32 +5,37 @@ import java.net.ProtocolFamily;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class MessageBrokerClient {
     private SocketChannel channel = null;
     private Listeners listeners = null;
-    private volatile boolean connected = false; 
+    private AtomicBoolean connected = new AtomicBoolean(true);
 
     public MessageBrokerClient() {}
 
     public void connect(SocketAddress address, ProtocolFamily protocol) throws IOException {
         this.channel = SocketChannel.open(protocol);
+        this.channel.configureBlocking(false);
         this.channel.connect(address);
-        this.connected = true;
         this.listeners.onConnect();
 
-        while (this.connected) {
-            ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES); 
-            int read = channel.read(buffer);
-            buffer.flip();
-            if (read > 0) {
-                int val = buffer.getInt();
-                this.listeners.onMessage(val);
-            } else {
-                this.listeners.onDisconnect();
-                this.connected = false;
+        try {
+            while (this.connected.get()) {
+                ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES); 
+                int read = channel.read(buffer);
+                buffer.flip();
+                if (read > 0) {
+                    int val = buffer.getInt();
+                    this.listeners.onMessage(val);
+                } else if (read == -1) {
+                    this.listeners.onDisconnect();
+                    this.connected.set(false);
+                }
             }
+        } finally {
+            this.channel.close();
         }
     }
 
@@ -46,18 +51,11 @@ public class MessageBrokerClient {
     }
 
     public void disconnect() throws IOException {
-        this.connected = false;
-        if (this.channel != null) {
-            this.channel.close();
-        }
-    }
-
-    public void close() throws IOException {
-        this.disconnect();
+        this.connected.set(false);
     }
 
     public boolean isConnected() {
-        return this.connected;
+        return this.channel.isConnected() && this.channel.isOpen();
     }
 
     public static interface Listeners {

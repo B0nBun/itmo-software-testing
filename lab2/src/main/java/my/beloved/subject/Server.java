@@ -10,13 +10,10 @@ import my.beloved.subject.broker.MessageBrokerServer;
 
 public class Server {
     public static void main(String[] args) throws IOException {
-        try (
-            var server = new MessageBrokerServer()
-        ) {
-            var socketFile = Path.of("./msgbrok.socket");
-            Files.deleteIfExists(socketFile);
-            var address = UnixDomainSocketAddress.of(socketFile);
-            server.bind(address, StandardProtocolFamily.UNIX);
-        }
+        var server = new MessageBrokerServer();
+        var socketFile = Path.of("./msgbrok.socket");
+        Files.deleteIfExists(socketFile);
+        var address = UnixDomainSocketAddress.of(socketFile);
+        server.bind(address, StandardProtocolFamily.UNIX);
     }
 }

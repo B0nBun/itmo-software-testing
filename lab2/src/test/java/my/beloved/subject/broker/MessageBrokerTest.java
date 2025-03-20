@@ -53,12 +53,12 @@ public class MessageBrokerTest {
         this.serverThread.start();
 
         Awaitility.setDefaultTimeout(Duration.TWO_SECONDS);
+        Awaitility.await().until(() -> Files.exists(socketFile));
     }
 
     @AfterEach
     public void teardown() throws IOException {
         this.server.stop();
-        this.server.close();
     }
     
     
@@ -136,6 +136,7 @@ public class MessageBrokerTest {
         var clients = setupClients(1);
         this.server.stop();
 
+        Awaitility.await().until(() -> this.server.isStopped());
         Assertions.assertThrows(IOException.class, () -> {
             clients[0].connect(this.address, this.protocol);
         });
@@ -149,6 +150,7 @@ public class MessageBrokerTest {
         Awaitility.await().until(() -> clients[0].isConnected());
         clients[0].disconnect();
         Awaitility.await().until(() -> !clients[0].isConnected());
+
         Assertions.assertThrows(IOException.class, () -> {
             clients[0].send(0);
         });
