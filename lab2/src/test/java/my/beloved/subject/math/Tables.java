@@ -3,7 +3,6 @@ package my.beloved.subject.math;
 import static org.mockito.ArgumentMatchers.anyDouble;
 
 import java.io.StringReader;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -229,10 +228,10 @@ public class Tables {
                     return entry.getValue();
                 }
             }
-            // throw new RuntimeException("failed ot find entry for " + x + " in mock table for class " + func.getClass().getName());
-            var format = new DecimalFormat("#.######");
-            System.out.println("#" + func.getClass().getName() + " \"" + format.format(x) + "," + format.format(func.apply(x)) + "\",");
-            return Double.NaN;
+            throw new RuntimeException("failed ot find entry for " + x + " in mock table for class " + func.getClass().getName());
+            // var format = new DecimalFormat("#.######");
+            // System.out.println("#" + func.getClass().getName() + " \"" + format.format(x) + "," + format.format(func.apply(x)) + "\",");
+            // return Double.NaN;
         });
         return mockFunc;
     } 
