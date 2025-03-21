@@ -31,7 +31,12 @@ public class Mathematics {
 
             tmp = a * (b / c);
 
-            result += tmp;
+            double nextres = result + tmp;
+            if (!Double.isFinite(nextres)) {
+                break;
+            } else {
+                result = nextres;
+            }
             k++;
         }
 
@@ -86,7 +91,12 @@ public class Mathematics {
             double b = Math.pow(x - 1, k);
 
             tmp = a * b;
-            result += tmp;
+            double nextres = result + tmp;
+            if (!Double.isFinite(nextres)) {
+                break;
+            } else {
+                result = nextres;
+            }
             k++;
         }
 

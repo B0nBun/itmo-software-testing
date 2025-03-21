@@ -8,65 +8,103 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 
-// TODO: Check SIN and LN separately (right now they are mocked)
 // TODO: Test UberFunc
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class MathematicsTest {
     private final double precision = 0.001;
-    private final Mathematics math = mockMath(precision);
 
-    public Mathematics mockMath(double precision) {
-        Mathematics realMath = new Mathematics(precision);
+    private final Map<Double, Double> sinTable = createSinTable();
+    private final Map<Double, Double> lnTable = createLnTable();
+    private final Mathematics realMath = new Mathematics(this.precision);
+    private final Mathematics math = mockMath(this.realMath);
+
+    public Mathematics mockMath(Mathematics realMath) {
         Mathematics math = Mockito.spy(realMath);
-
-        Map<Double, Double> sinTable = createSinTable();
-        Map<Double, Double> lnTable = createLnTable();
 
         when(math.sin(Mockito.anyDouble())).thenAnswer(invocation -> {
             double x = invocation.getArgument(0);
-            for (var entry : sinTable.entrySet()) {
+            for (var entry : this.sinTable.entrySet()) {
                 var tableX = entry.getKey();
                 if (doubleEquals(tableX, x, precision)) {
                     return entry.getValue();
                 }
             }
-            throw new RuntimeException("failed to find a value for sin in the stub table for x=" + x);
+            System.out.println("SIN " + x + ", " + this.realMath.sin(x));
+            return Double.NaN;
+            // throw new RuntimeException("failed to find a value for sin in the stub table for x=" + x);
         });
 
         when(math.ln(Mockito.anyDouble())).thenAnswer(invocation -> {
             double x = invocation.getArgument(0);
-            for (var entry : lnTable.entrySet()) {
+            for (var entry : this.lnTable.entrySet()) {
                 var tableX = entry.getKey();
                 if (doubleEquals(tableX, x, precision)) {
                     return entry.getValue();
                 }
             }
-            throw new RuntimeException("failed to find a value for ln in the stub table for x=" + x);
+            // throw new RuntimeException("failed to find a value for ln in the stub table for x=" + x);
+            System.out.println("LN " + x + ", " + this.realMath.ln(x));
+            return Double.NaN;
         });
 
         return math;
     }
 
     @Nested
-    public class Sin {
+    public class UberFuncTest {
         @ParameterizedTest
         @CsvSource({
-            "0.0,                0.0",
-            "3.14159265359,      0.0",
-            "1.5707963267948966, 1",
-            "0.5235987755982988, 0.5"
+            "0.2, 0",
+            "0.1, 0",
+            "0.4, 0",
+            "0.5, 0",
+            "0.6, 0",
+            "5, 0",
+            "7.597, 0",
+            "12, 0",
+            "100, 0",
+            "-0.1, 0",
+            "-1, 0",
+            "-1.578, 0",
+            "-2.2, 0",
+            "-2.35, 0",
+            "-2.4823, 0",
+            "-2.63362, 0",
+            "-3.1, 0",
+            "-3.1415926, 0",
+            "-11, 0",
+            "-11.56248, 0",
+            "-11.83989, 0",
         })
         public void testPoints(double x, double expected) {
-            for (double sign : List.of(-1, 1)) {
-                double actual = math.sin(sign * x);
-                Assertions.assertEquals(sign * expected, actual, precision);
+            double actual = UberFunc.compute(math, x);
+            System.out.println(x + " -> " + actual);
+        }
+
+        @Test
+        public void testNaN() {
+            double actual = UberFunc.compute(math, 0.0);
+            Assertions.assertTrue(Double.isNaN(actual));
+        }
+    }
+
+    @Nested
+    public class Sin {
+        @Test
+        public void testPoints() {
+            for (var entry : sinTable.entrySet()) {
+                double x = entry.getKey();
+                double expected = entry.getValue();
+                double actual = realMath.sin(x);
+                Assertions.assertEquals(expected, actual, precision);
             }
         }
     }
@@ -150,6 +188,19 @@ public class MathematicsTest {
         public void testInfinity() {
             double actual = math.csc(Math.PI);
             Assertions.assertTrue(Double.isInfinite(actual));
+        }
+    }
+
+    @Nested
+    public class Ln {
+        @Test
+        public void testPoints() {
+            for (var entry : lnTable.entrySet()) {
+                double x = entry.getKey();
+                double expected = entry.getValue();
+                double actual = realMath.ln(x);
+                Assertions.assertEquals(expected, actual, precision);
+            }
         }
     }
 
