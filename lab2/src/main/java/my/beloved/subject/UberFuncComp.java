@@ -3,7 +3,13 @@ package my.beloved.subject;
 import java.util.Map;
 import java.util.function.Function;
 
-import my.beloved.subject.math.Mathematics;
+import my.beloved.subject.math.Cos;
+import my.beloved.subject.math.Cot;
+import my.beloved.subject.math.Csc;
+import my.beloved.subject.math.Ln;
+import my.beloved.subject.math.Log5;
+import my.beloved.subject.math.Sin;
+import my.beloved.subject.math.Tan;
 import my.beloved.subject.math.UberFunc;
 
 public class UberFuncComp {
@@ -13,8 +19,7 @@ public class UberFuncComp {
             return;
         }
         
-        var math = new Mathematics(0.001);
-        var funcTable = getFuncTable(math);
+        var funcTable = getFuncTable(0.001);
         Function<Double, Double> func = funcTable.get(args[0]);
         if (func == null) {
             System.out.println("For <func> expected one of: " + String.join(", ", funcTable.keySet()));
@@ -31,22 +36,30 @@ public class UberFuncComp {
         double end = 10 * step;
 
         System.out.println("x,y");
-        for (double x = start; x < end; x += step) {
+        for (double x = start; x <= end; x += step) {
             double y = func.apply(x);
             System.out.println(x + "," + y);
         }
     }
 
-    public static Map<String, Function<Double, Double>> getFuncTable(Mathematics math) {
+    public static Map<String, Function<Double, Double>> getFuncTable(double precision) {
+        var sin = new Sin(precision);
+        var cos = new Cos(sin);
+        var tan = new Tan(sin, cos);
+        var cot = new Cot(sin, cos);
+        var csc = new Csc(sin);
+        var ln = new Ln(precision);
+        var log5 = new Log5(ln);
+        var uber = new UberFunc(tan, cot, csc, cos, sin, ln, log5);
         return Map.of(
-            "sin", math::sin,
-            "cos", math::cos,
-            "tan", math::tan,
-            "cot", math::cot,
-            "csc", math::csc,
-            "ln", math::ln,
-            "log5", (x) -> math.log(x, 5),
-            "uber", (x) -> UberFunc.compute(math, x)
+            "sin", sin,
+            "cos", cos,
+            "tan", tan,
+            "cot", cot,
+            "csc", csc,
+            "ln", ln,
+            "log5", log5,
+            "uber", uber
         );
     }
 }
