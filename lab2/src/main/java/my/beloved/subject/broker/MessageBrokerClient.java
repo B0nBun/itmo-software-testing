@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class MessageBrokerClient {
-    private SocketChannel channel = null;
+    private volatile SocketChannel channel = null;
     private Listeners listeners = null;
     private AtomicBoolean connected = new AtomicBoolean(true);
 
@@ -55,7 +55,7 @@ public class MessageBrokerClient {
     }
 
     public boolean isConnected() {
-        return this.channel.isConnected() && this.channel.isOpen();
+        return this.channel != null && this.channel.isConnected() && this.channel.isOpen();
     }
 
     public static interface Listeners {

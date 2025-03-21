@@ -42,6 +42,8 @@ public class UberFuncComp {
         }
     }
 
+    
+
     public static Map<String, Function<Double, Double>> getFuncTable(double precision) {
         var sin = new Sin(precision);
         var cos = new Cos(sin);

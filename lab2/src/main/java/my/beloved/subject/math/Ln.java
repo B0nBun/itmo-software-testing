@@ -31,11 +31,9 @@ public class Ln implements Function<Double, Double> {
             double b = Math.pow(x - 1, k);
 
             tmp = a * b;
-            double nextres = result + tmp;
-            if (!Double.isFinite(nextres)) {
+            result += tmp;
+            if (!Double.isFinite(result)) {
                 break;
-            } else {
-                result = nextres;
             }
             k++;
         }
